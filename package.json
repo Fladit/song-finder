@@ -1,0 +1,24 @@
+{
+  "name": "song-finder",
+  "version": "1.0.0",
+  "description": "Find songs by youtube video link",
+  "main": "./src/server/app.js",
+  "scripts": {
+    "start": "node ./src/server/app.js",
+    "dev": "nodemon app.js"
+  },
+  "keywords": [],
+  "author": "Fl4d1t",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^0.19.2",
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "express-validation": "^3.0.5",
+    "form-data": "^3.0.0",
+    "moment": "^2.27.0",
+    "mp3-cutter": "^1.0.6",
+    "nodemon": "^2.0.4",
+    "puppeteer": "^5.1.0"
+  }
+}
