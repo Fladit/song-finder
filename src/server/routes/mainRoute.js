@@ -14,6 +14,7 @@ router.get("/",   (req, res) => {
         try {
             await newReq.save();
             res.status(200).send(newReq);
+            console.log(newReq)
         }
         catch (e) {
             throw e;
