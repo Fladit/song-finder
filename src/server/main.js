@@ -7,11 +7,7 @@ const FormData = require('form-data')
 const moment = require('moment')
 require('dotenv').config()
 
-const checkRequirements = async (videoURL, start, end) => {
-    if (start <= 0 || end <= start || (end - start) < 3) {
-        return false;
-    }
-
+const getVideoID = (videoURL) => {
     let videoID = ""
     if (!(videoURL === "" || videoURL === undefined || videoURL === null))
     {
@@ -36,12 +32,23 @@ const checkRequirements = async (videoURL, start, end) => {
         else return false;
     }
     else return false;
+    return videoID;
+}
 
-    const duration = await getVideoDuration(videoID);
-    console.log("checkout duration: ", duration);
-    if (duration < 5)
+const checkRequirements = async (videoURL, start, end) => {
+    if (start <= 0 || end <= start || (end - start) < 3) {
         return false;
-    return true;
+    }
+
+    const videoID = getVideoID(videoURL);
+    if (videoID) {
+        const duration = await getVideoDuration(videoID);
+        console.log("checkout duration: ", duration);
+        if (duration < 5)
+            return false;
+        return true;
+    }
+    return false;
 
 }
 const getVideoDuration = async (videoID) => {
@@ -143,4 +150,4 @@ const findSong = async (videoURL, start, end) =>{
 
 }
 
-module.exports = {getVideoDuration, findSong};
+module.exports = {getVideoDuration, findSong, getVideoID};
