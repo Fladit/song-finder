@@ -37,6 +37,7 @@ const getVideoID = (videoURL) => {
 
 const checkRequirements = async (videoURL, start, end) => {
     if (start <= 0 || end <= start || (end - start) < 3) {
+        console.log("Wrong time period");
         return false;
     }
 
@@ -48,6 +49,7 @@ const checkRequirements = async (videoURL, start, end) => {
             return false;
         return true;
     }
+    console.log("Wrong id");
     return false;
 
 }
@@ -57,7 +59,7 @@ const getVideoDuration = async (videoID) => {
     const response = await Axios.get(reqURL);
     let isoTime = response.data.items[0].contentDetails.duration
     const date = (moment.duration(isoTime).asMilliseconds() / 1000);
-    return date;
+    return date - 1;
 }
 const getLink = async (videoURL) => {
     const browser = await Puppeteer.launch();
@@ -115,16 +117,20 @@ const waitPipeFile = (song, targetPath, start, end) => {
     })
 }
 
-const findSong = async (videoURL, start, end) =>{
+const findSong = async (videoURL, start, end, clientIP) =>{
     const check = await checkRequirements(videoURL, start, end);
     if (!check)
-        return "error";
-    const currentPath = __dirname + "/../client/me/"
+        return "requirements are violated";
+    const currentPath = __dirname + `/../client/${clientIP}/`;
+    fs.mkdir(currentPath, {recursive: true}, (err) => {
+        if (err)
+            throw err;
+    });
     const linkForDownload = await getLink(videoURL);
     console.log("Link: ", linkForDownload);
     const song = fs.createWriteStream(currentPath + "song.mp3");
     const targetPath = currentPath + 'target.mp3'
-    console.log(typeof linkForDownload, " value = ", linkForDownload)
+    //console.log(typeof linkForDownload, " value = ", linkForDownload)
     try {
         const response = await Axios({
             url: linkForDownload,
@@ -133,6 +139,7 @@ const findSong = async (videoURL, start, end) =>{
         })
 
         response.data.pipe(song)
+        console.log("log 1")
         await waitPipeFile(song, targetPath, start, end);
 
         const res = await audDRequest(targetPath)
@@ -141,7 +148,8 @@ const findSong = async (videoURL, start, end) =>{
         console.log("auddInfo: ", res.data)
         fs.unlink(song.path, err => err);
         fs.unlink(targetPath, err => err);
-        return res;
+        fs.unlink(currentPath, err => err);
+        return res.data;
     }
     catch (e) {
         console.log(e)

@@ -13,9 +13,21 @@ router.post("/",   (req, res) => {
             ip: req.ip
         });
         try {
-            await newReq.save();
-            res.status(200).send(newReq);
-            console.log(newReq)
+            await newReq.save(() => {
+                setTimeout(() => {
+                    newReq.remove( err, removed => {
+                        if (err) {
+                            console.log("newReq.remove");
+                            throw err;
+                        }
+                    })
+                }, 60000);
+            });
+            console.log("after save")
+            console.log(req.body.id, req.body.start, req.body.end, req.ip);
+            const songInfo = await mainFunc.findSong(req.body.id, parseInt(req.body.start), parseInt(req.body.end), req.ip === "::1"? "me" : req.ip);
+            console.log("song info:", songInfo);
+            res.status(200).send(songInfo);
         }
         catch (e) {
             throw e;
@@ -32,7 +44,7 @@ router.post("/duration", ( async (req, res) => {
         console.log(duration)
         if (duration < 5)
             res.status(400).send("The video is too short");
-        else res.status(200).send({duration: duration});
+        else res.status(200).send({videoID: videoID, duration: duration});
     }
     else res.status(400).send("Incorrect video link");
 }))
