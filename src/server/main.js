@@ -36,7 +36,7 @@ const getVideoID = (videoURL) => {
 }
 
 const checkRequirements = async (videoURL, start, end) => {
-    if (start <= 0 || end <= start || (end - start) < 3) {
+    if (start < 0 || end <= start || (end - start) < 3) {
         console.log("Wrong time period");
         return false;
     }
