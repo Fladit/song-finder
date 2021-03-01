@@ -1,7 +1,7 @@
 const router = require("express").Router();
 const requestSchema = require("../Schemes/RequestSchema")
 const mainFunc = require("../main");
-const mainErrors = require("../customErrors/mainErrors")
+const mainErrors = require("../customErrors/mainErrors").mainErrors
 router.post("/",   (req, res) => {
     const userIP = req.ip;
     requestSchema.countDocuments({ip: userIP}, async (err, count) => {

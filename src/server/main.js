@@ -5,6 +5,7 @@ const Cutter = require('mp3-cutter')
 const path = require('path')
 const FormData = require('form-data')
 const moment = require('moment')
+const {createCustomError} = require('../server/customErrors/mainErrors')
 require('dotenv').config()
 
 const getVideoID = (videoURL) => {
@@ -40,12 +41,16 @@ const checkRequirements = async (videoURL, start, end) => {
         console.log("Wrong time period");
         return false;
     }
-
     const videoID = getVideoID(videoURL);
     if (videoID) {
-        const duration = await getVideoDuration(videoID);
-        console.log("checkout duration: ", duration);
-        return duration >= 5;
+        try {
+            const duration = await getVideoDuration(videoID);
+            console.log("checkout duration: ", duration);
+            return duration >= 5;
+        }
+        catch (e) {
+            throw createCustomError(e.message)
+        }
     }
     console.log("Wrong id");
     return false;
@@ -138,9 +143,13 @@ const findSong = async (videoURL, start, end, clientIP) =>{
         })
 
         response.data.pipe(song)
-        console.log("log 1")
         await waitPipeFile(song, targetPath, start, end);
-
+    }
+    catch (e) {
+        song.close()
+        throw e
+    }
+    try {
         const res = await audDRequest(targetPath)
         //const songLinkRes = await Axios.get("https://lis.tn/ZgEEs");
         //console.log(songLinkRes)
@@ -148,6 +157,11 @@ const findSong = async (videoURL, start, end, clientIP) =>{
         fs.unlink(song.path, err => err);
         fs.unlink(targetPath, err => err);
         fs.unlink(currentPath, err => err);
+        if (res.data.status === "error") {
+            const err = createCustomError(res.data.error.error_message, res.data.error.error_code, "RecognitionFailed")
+            throw err
+        }
+        song.close()
         return res.data;
     }
     catch (e) {
