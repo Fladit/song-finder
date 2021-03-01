@@ -45,9 +45,7 @@ const checkRequirements = async (videoURL, start, end) => {
     if (videoID) {
         const duration = await getVideoDuration(videoID);
         console.log("checkout duration: ", duration);
-        if (duration < 5)
-            return false;
-        return true;
+        return duration >= 5;
     }
     console.log("Wrong id");
     return false;
@@ -56,6 +54,7 @@ const checkRequirements = async (videoURL, start, end) => {
 const getVideoDuration = async (videoID) => {
     const APIkey = process.env.YOUTUBE_API_KEY
     const reqURL = `https://www.googleapis.com/youtube/v3/videos?id=${videoID}&part=contentDetails&key=${APIkey}`
+    console.log(reqURL)
     const response = await Axios.get(reqURL);
     let isoTime = response.data.items[0].contentDetails.duration
     const date = (moment.duration(isoTime).asMilliseconds() / 1000);
@@ -92,7 +91,7 @@ const audDRequest = async (target) => {
         return response;
     }
     catch (e) {
-        alert(e)
+        throw e
     }
 };
 
@@ -152,8 +151,8 @@ const findSong = async (videoURL, start, end, clientIP) =>{
         return res.data;
     }
     catch (e) {
-        console.log(e)
         song.close()
+        throw e
     }
 
 }
