@@ -2,10 +2,9 @@ const Puppeteer = require('puppeteer');
 const fs = require('fs')
 const Axios = require('axios')
 const Cutter = require('mp3-cutter')
-const path = require('path')
 const FormData = require('form-data')
 const moment = require('moment')
-const {createCustomError} = require('../server/customErrors/mainErrors')
+const {createCustomError, mainErrors} = require('../server/customErrors/mainErrors')
 require('dotenv').config()
 
 const getVideoID = (videoURL) => {
@@ -36,51 +35,76 @@ const getVideoID = (videoURL) => {
     return videoID;
 }
 
+// start - начало видео, end - конец видео
 const checkRequirements = async (videoURL, start, end) => {
-    if (start < 0 || end <= start || (end - start) < 3) {
-        console.log("Wrong time period");
-        return false;
+    const throwVideoError = (message) => {
+        const err = mainErrors.INCORRECT_VIDEO_PARAMETERS_ERROR
+        err.error.message = message
+        throw err
+    }
+    const minDuration = 5
+    if (start < 0) {
+        throwVideoError("Start of video must be more than 0")
+    }
+    else if (end <= start) {
+        throwVideoError("End of video must be more than start")
+    }
+    else if (end - start < minDuration) {
+        throwVideoError("Duration of video must be 5 sec or more")
     }
     const videoID = getVideoID(videoURL);
     if (videoID) {
         try {
             const duration = await getVideoDuration(videoID);
             console.log("checkout duration: ", duration);
-            return duration >= 5;
+            if (duration >= minDuration)
+                return duration >= minDuration
+            throwVideoError("Duration of video must be 5 sec or more")
         }
         catch (e) {
-            throw createCustomError(e.message)
+            throw e
         }
     }
-    console.log("Wrong id");
-    return false;
+    throwVideoError("Invalid link to the video")
 
 }
 const getVideoDuration = async (videoID) => {
     const APIkey = process.env.YOUTUBE_API_KEY
     const reqURL = `https://www.googleapis.com/youtube/v3/videos?id=${videoID}&part=contentDetails&key=${APIkey}`
     console.log(reqURL)
-    const response = await Axios.get(reqURL);
-    let isoTime = response.data.items[0].contentDetails.duration
-    const date = (moment.duration(isoTime).asMilliseconds() / 1000);
-    return date - 1;
+    try {
+        const response = await Axios.get(reqURL);
+        let isoTime = response.data.items[0].contentDetails.duration
+        const date = (moment.duration(isoTime).asMilliseconds() / 1000);
+        return date - 1;
+    }
+    catch (e) {
+        const err = mainErrors.YOUTUBE_API_ERROR
+        err.error.message = e.error.message
+        throw err
+    }
 }
 const getLink = async (videoURL) => {
-    const browser = await Puppeteer.launch();
-    const page = await browser.newPage();
-    await page.goto('https://ytmp3.cc/en13/');
-    //await page.$eval("#input", (el, videoURL) => el.value = videoURL);
-    await page.evaluate( (videoURL) => {
-        document.querySelector("#input").value = videoURL
-    }, videoURL)
-    await page.click("#submit");
-    await page.waitForSelector("#buttons > a:nth-child(1)", {visible: true})
-    const downloadLink = await page.evaluate( () => {
-        const downloadButton = document.querySelector("#buttons > a:nth-child(1)")
-        return downloadButton.href
-    })
-    await browser.close();
-    return downloadLink
+    try {
+        const browser = await Puppeteer.launch();
+        const page = await browser.newPage();
+        await page.goto('https://ytmp3.cc/en13/');
+        //await page.$eval("#input", (el, videoURL) => el.value = videoURL);
+        await page.evaluate((videoURL) => {
+            document.querySelector("#input").value = videoURL
+        }, videoURL)
+        await page.click("#submit");
+        await page.waitForSelector("#buttons > a:nth-child(1)", {visible: true})
+        const downloadLink = await page.evaluate(() => {
+            const downloadButton = document.querySelector("#buttons > a:nth-child(1)")
+            return downloadButton.href
+        })
+        await browser.close();
+        return downloadLink
+    }
+    catch (e) {
+        throw createCustomError(e.message)
+    }
 }
 
 const audDRequest = async (target) => {
@@ -92,8 +116,7 @@ const audDRequest = async (target) => {
     console.log("start AudD Request");
 
     try {
-        const response = await Axios.post("https://api.audd.io/", fd, {headers: fd.getHeaders()})
-        return response;
+        return await Axios.post("https://api.audd.io/", fd, {headers: fd.getHeaders()});
     }
     catch (e) {
         throw e
@@ -122,13 +145,11 @@ const waitPipeFile = (song, targetPath, start, end) => {
 }
 
 const findSong = async (videoURL, start, end, clientIP) =>{
-    const check = await checkRequirements(videoURL, start, end);
-    if (!check)
-        return "requirements are violated";
+    await checkRequirements(videoURL, start, end);
     const currentPath = __dirname + `/../client/${clientIP}/`;
     fs.mkdir(currentPath, {recursive: true}, (err) => {
         if (err)
-            throw err;
+            throw createCustomError(err.message);
     });
     const linkForDownload = await getLink(videoURL);
     console.log("Link: ", linkForDownload);
@@ -141,14 +162,13 @@ const findSong = async (videoURL, start, end, clientIP) =>{
             method: 'GET',
             responseType: 'stream'
         })
-
         response.data.pipe(song)
-        await waitPipeFile(song, targetPath, start, end);
     }
     catch (e) {
         song.close()
-        throw e
+        throw createCustomError(e.message)
     }
+    await waitPipeFile(song, targetPath, start, end);
     try {
         const res = await audDRequest(targetPath)
         //const songLinkRes = await Axios.get("https://lis.tn/ZgEEs");
@@ -158,8 +178,7 @@ const findSong = async (videoURL, start, end, clientIP) =>{
         fs.unlink(targetPath, err => err);
         fs.unlink(currentPath, err => err);
         if (res.data.status === "error") {
-            const err = createCustomError(res.data.error.error_message, res.data.error.error_code, "RecognitionFailed")
-            throw err
+            throw createCustomError(res.data.error.error_message, res.data.error.error_code, "RecognitionFailed")
         }
         song.close()
         return res.data;

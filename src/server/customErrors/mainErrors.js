@@ -1,7 +1,10 @@
 errorCodes = {
+    UNEXPECTED_SERVER_ERROR: 0,
     REQUEST_LIMIT_ERROR: 1,
     SHORT_VIDEO_ERROR: 2,
     INCORRECT_VIDEO_LINK_ERROR: 3,
+    INCORRECT_VIDEO_PARAMETERS_ERROR: 4,
+    YOUTUBE_API_ERROR: 5,
 }
 
 const mainErrors = {
@@ -27,6 +30,22 @@ const mainErrors = {
             code: errorCodes.INCORRECT_VIDEO_LINK_ERROR,
             name: "IncorrectVideoLinkError",
             message: "Incorrect video link."
+        }
+    },
+    INCORRECT_VIDEO_PARAMETERS_ERROR: {
+        status: "error",
+        error: {
+            code: errorCodes.INCORRECT_VIDEO_PARAMETERS_ERROR,
+            name: "IncorrectVideoParametersError",
+            message: "Incorrect Video Parameters"
+        }
+    },
+    YOUTUBE_API_ERROR: {
+        status: "error",
+        error: {
+            code: errorCodes.YOUTUBE_API_ERROR,
+            name: "YoutubeAPIError",
+            message: "Problems with interaction with the Youtube API"
         }
     }
 
