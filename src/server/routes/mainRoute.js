@@ -1,6 +1,7 @@
 const router = require("express").Router();
 const requestSchema = require("../Schemes/RequestSchema")
-const mainFunc = require("../main");
+const {findSong} = require("../songLogic");
+const {getVideoDuration, getVideoID} = require("../videoLogic");
 const {createCustomError, mainErrors} = require("../customErrors/mainErrors");
 router.post("/",   (req, res) => {
     const userIP = req.ip;
@@ -27,11 +28,12 @@ router.post("/",   (req, res) => {
             console.log("after save")
             console.log(req.body.id, req.body.start, req.body.end, req.ip);
             try {
-                const songInfo = await mainFunc.findSong(req.body.id, parseInt(req.body.start), parseInt(req.body.end), req.ip === "::1"? "me" : req.ip);
+                const songInfo = await findSong(req.body.id, parseInt(req.body.start), parseInt(req.body.end), req.ip === "::1"? "me" : req.ip);
                 console.log("song info:", songInfo);
                 res.status(200).send(songInfo);
             }
             catch (e) {
+                console.log(e)
                 res.status(200).json(e)
             }
         }
@@ -43,18 +45,18 @@ router.post("/",   (req, res) => {
 })
 
 router.post("/duration", ( async (req, res) => {
-    const videoID = mainFunc.getVideoID(req.body.id);
+    const videoID = getVideoID(req.body.id);
     if (videoID)
     {
         try {
-            const duration = await mainFunc.getVideoDuration(videoID);
+            const duration = await getVideoDuration(videoID);
             console.log(duration)
             if (duration < 5)
                 res.status(200).send(mainErrors.SHORT_VIDEO_ERROR);
             else res.status(200).send({videoID: videoID, duration: duration});
         }
         catch (e) {
-            console.log(e.message)
+            console.log(e)
             res.status(200).json(e)
         }
     }

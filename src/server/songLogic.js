@@ -3,88 +3,10 @@ const fs = require('fs')
 const Axios = require('axios')
 const Cutter = require('mp3-cutter')
 const FormData = require('form-data')
-const moment = require('moment')
-const {createCustomError, mainErrors} = require('../server/customErrors/mainErrors')
-require('dotenv').config()
+const {createCustomError} = require("./customErrors/mainErrors")
+const {checkVideoRequirements} = require("./videoLogic")
 
-const getVideoID = (videoURL) => {
-    let videoID = ""
-    if (!(videoURL === "" || videoURL === undefined || videoURL === null))
-    {
-        if (videoURL.length >= 16)
-        {
-            if (videoURL.includes("youtube.com"))
-            {
-                if (videoURL.includes("v="))
-                {
-                    videoID = videoURL.split("v=")[1].substring(0,11);
-                }
-                else return false;
-            }
-            else {
-                if (videoURL.includes("youtu.be"))
-                {
-                    videoID = videoURL.split("youtu.be/")[1].substring(0,11);
-                }
-                else return false;
-            }
-        }
-        else return false;
-    }
-    else return false;
-    return videoID;
-}
-
-// start - начало видео, end - конец видео
-const checkRequirements = async (videoURL, start, end) => {
-    const throwVideoError = (message) => {
-        const err = mainErrors.INCORRECT_VIDEO_PARAMETERS_ERROR
-        err.error.message = message
-        throw err
-    }
-    const minDuration = 5
-    if (start < 0) {
-        throwVideoError("Start of video must be more than 0")
-    }
-    else if (end <= start) {
-        throwVideoError("End of video must be more than start")
-    }
-    else if (end - start < minDuration) {
-        throwVideoError("Duration of video must be 5 sec or more")
-    }
-    const videoID = getVideoID(videoURL);
-    if (videoID) {
-        try {
-            const duration = await getVideoDuration(videoID);
-            console.log("checkout duration: ", duration);
-            if (duration >= minDuration)
-                return duration >= minDuration
-            throwVideoError("Duration of video must be 5 sec or more")
-        }
-        catch (e) {
-            throw e
-        }
-    }
-    throwVideoError("Invalid link to the video")
-
-}
-const getVideoDuration = async (videoID) => {
-    const APIkey = process.env.YOUTUBE_API_KEY
-    const reqURL = `https://www.googleapis.com/youtube/v3/videos?id=${videoID}&part=contentDetails&key=${APIkey}`
-    console.log(reqURL)
-    try {
-        const response = await Axios.get(reqURL);
-        let isoTime = response.data.items[0].contentDetails.duration
-        const date = (moment.duration(isoTime).asMilliseconds() / 1000);
-        return date - 1;
-    }
-    catch (e) {
-        const err = mainErrors.YOUTUBE_API_ERROR
-        err.error.message = e.error.message
-        throw err
-    }
-}
-const getLink = async (videoURL) => {
+const getLinkOfAudioRoad = async (videoURL) => {
     try {
         const browser = await Puppeteer.launch();
         const page = await browser.newPage();
@@ -107,7 +29,7 @@ const getLink = async (videoURL) => {
     }
 }
 
-const audDRequest = async (target) => {
+const sendAuddRequest = async (target) => {
     const targetFile = fs.createReadStream(target)
     let fd = new FormData()
     fd.append("file", targetFile);
@@ -123,7 +45,7 @@ const audDRequest = async (target) => {
     }
 };
 
-const waitPipeFile = (song, targetPath, start, end) => {
+const waitResultOfPipeFile = (song, targetPath, start, end) => {
     return new Promise((resolve, reject) => {
         console.log("start waiting :)")
         song.on('finish', () => {
@@ -145,13 +67,13 @@ const waitPipeFile = (song, targetPath, start, end) => {
 }
 
 const findSong = async (videoURL, start, end, clientIP) =>{
-    await checkRequirements(videoURL, start, end);
+    await checkVideoRequirements(videoURL, start, end);
     const currentPath = __dirname + `/../client/${clientIP}/`;
     fs.mkdir(currentPath, {recursive: true}, (err) => {
         if (err)
             throw createCustomError(err.message);
     });
-    const linkForDownload = await getLink(videoURL);
+    const linkForDownload = await getLinkOfAudioRoad(videoURL);
     console.log("Link: ", linkForDownload);
     const song = fs.createWriteStream(currentPath + "song.mp3");
     const targetPath = currentPath + 'target.mp3'
@@ -168,9 +90,9 @@ const findSong = async (videoURL, start, end, clientIP) =>{
         song.close()
         throw createCustomError(e.message)
     }
-    await waitPipeFile(song, targetPath, start, end);
+    await waitResultOfPipeFile(song, targetPath, start, end);
     try {
-        const res = await audDRequest(targetPath)
+        const res = await sendAuddRequest(targetPath)
         //const songLinkRes = await Axios.get("https://lis.tn/ZgEEs");
         //console.log(songLinkRes)
         console.log("auddInfo: ", res.data)
@@ -190,4 +112,4 @@ const findSong = async (videoURL, start, end, clientIP) =>{
 
 }
 
-module.exports = {getVideoDuration, findSong, getVideoID};
+module.exports = {findSong}

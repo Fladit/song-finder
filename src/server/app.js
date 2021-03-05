@@ -1,7 +1,7 @@
 require('dotenv').config()
 const express = require("express")
 const mongoose = require("mongoose")
-const main = require("./main")
+const main = require("./videoLogic")
 const mainRoute = require("./routes/mainRoute")
 const bodyParser = require("body-parser")
 const cors = require("cors")
