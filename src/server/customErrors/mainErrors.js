@@ -5,6 +5,7 @@ errorCodes = {
     INCORRECT_VIDEO_LINK_ERROR: 3,
     INCORRECT_VIDEO_PARAMETERS_ERROR: 4,
     YOUTUBE_API_ERROR: 5,
+    RECOGNITION_FAILED_ERROR: 6,
 }
 
 const mainErrors = {
@@ -46,6 +47,14 @@ const mainErrors = {
             code: errorCodes.YOUTUBE_API_ERROR,
             name: "YoutubeAPIError",
             message: "Problems with interaction with the Youtube API"
+        }
+    },
+    RECOGNITION_FAILED_ERROR: {
+        status: "error",
+        error: {
+            code: errorCodes.RECOGNITION_FAILED_ERROR,
+            name: "RecognitionFailedError",
+            message: "Recognition failed"
         }
     }
 

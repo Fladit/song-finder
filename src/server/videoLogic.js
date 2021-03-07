@@ -1,6 +1,6 @@
 const Axios = require('axios')
 const moment = require('moment')
-const {mainErrors} = require('../server/customErrors/mainErrors')
+const {mainErrors, createCustomError} = require('../server/customErrors/mainErrors')
 require('dotenv').config()
 
 const getVideoID = (videoURL) => {
@@ -34,8 +34,8 @@ const getVideoID = (videoURL) => {
 // start - начало видео, end - конец видео
 const checkVideoRequirements = async (videoURL, start, end) => {
     const throwVideoError = (message) => {
-        const err = mainErrors.INCORRECT_VIDEO_PARAMETERS_ERROR
-        err.error.message = message
+        const err = createCustomError(message, mainErrors.INCORRECT_VIDEO_PARAMETERS_ERROR.error.code,
+            mainErrors.INCORRECT_VIDEO_PARAMETERS_ERROR.error.name)
         throw err
     }
     const minDuration = 5

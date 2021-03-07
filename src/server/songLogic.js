@@ -3,7 +3,7 @@ const fs = require('fs')
 const Axios = require('axios')
 const Cutter = require('mp3-cutter')
 const FormData = require('form-data')
-const {createCustomError} = require("./customErrors/mainErrors")
+const {createCustomError, mainErrors} = require("./customErrors/mainErrors")
 const {checkVideoRequirements} = require("./videoLogic")
 
 const getLinkOfAudioRoad = async (videoURL) => {
@@ -100,7 +100,9 @@ const findSong = async (videoURL, start, end, clientIP) =>{
         fs.unlink(targetPath, err => err);
         fs.unlink(currentPath, err => err);
         if (res.data.status === "error") {
-            throw createCustomError(res.data.error.error_message, res.data.error.error_code, "RecognitionFailed")
+            const err = createCustomError(res.data.error.error_message, res.data.error.error_code,
+                mainErrors.RECOGNITION_FAILED_ERROR.error.name)
+            throw err
         }
         song.close()
         return res.data;
