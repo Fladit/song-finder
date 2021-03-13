@@ -1,11 +1,11 @@
 errorCodes = {
-    UNEXPECTED_SERVER_ERROR: 0,
-    REQUEST_LIMIT_ERROR: 1,
-    SHORT_VIDEO_ERROR: 2,
-    INCORRECT_VIDEO_LINK_ERROR: 3,
-    INCORRECT_VIDEO_PARAMETERS_ERROR: 4,
-    YOUTUBE_API_ERROR: 5,
-    RECOGNITION_FAILED_ERROR: 6,
+    UNEXPECTED_SERVER_ERROR: "0",
+    REQUEST_LIMIT_ERROR: "1",
+    SHORT_VIDEO_ERROR: "2",
+    INCORRECT_VIDEO_LINK_ERROR: "3",
+    INCORRECT_VIDEO_PARAMETERS_ERROR: "4",
+    YOUTUBE_API_ERROR: "5",
+    RECOGNITION_FAILED_ERROR: "6",
 }
 
 const mainErrors = {
@@ -34,12 +34,30 @@ const mainErrors = {
         }
     },
     INCORRECT_VIDEO_PARAMETERS_ERROR: {
-        status: "error",
-        error: {
-            code: errorCodes.INCORRECT_VIDEO_PARAMETERS_ERROR,
-            name: "IncorrectVideoParametersError",
-            message: "Incorrect Video Parameters"
-        }
+        BAD_START_TIME: {
+            status: "error",
+            error: {
+                code: `${errorCodes.INCORRECT_VIDEO_PARAMETERS_ERROR}.1`,
+                name: "IncorrectVideoParametersError",
+                message: "Start of video must be more than 0"
+            }
+        },
+        BAD_END_TIME: {
+            status: "error",
+            error: {
+                code: `${errorCodes.INCORRECT_VIDEO_PARAMETERS_ERROR}.2`,
+                name: "IncorrectVideoParametersError",
+                message: "End of video must be more than start"
+            }
+        },
+        BAD_DURATION: {
+            status: "error",
+            error: {
+                code: `${errorCodes.INCORRECT_VIDEO_PARAMETERS_ERROR}.3`,
+                name: "IncorrectVideoParametersError",
+                message: "Duration of video must be 5 sec or more"
+            }
+        },
     },
     YOUTUBE_API_ERROR: {
         status: "error",

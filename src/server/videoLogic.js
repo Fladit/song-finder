@@ -33,20 +33,15 @@ const getVideoID = (videoURL) => {
 
 // start - начало видео, end - конец видео
 const checkVideoRequirements = async (videoURL, start, end) => {
-    const throwVideoError = (message) => {
-        const err = createCustomError(message, mainErrors.INCORRECT_VIDEO_PARAMETERS_ERROR.error.code,
-            mainErrors.INCORRECT_VIDEO_PARAMETERS_ERROR.error.name)
-        throw err
-    }
     const minDuration = 5
     if (start < 0) {
-        throwVideoError("Start of video must be more than 0")
+        throw mainErrors.INCORRECT_VIDEO_PARAMETERS_ERROR.BAD_START_TIME
     }
     else if (end <= start) {
-        throwVideoError("End of video must be more than start")
+        throw mainErrors.INCORRECT_VIDEO_PARAMETERS_ERROR.BAD_END_TIME
     }
     else if (end - start < minDuration) {
-        throwVideoError("Duration of video must be 5 sec or more")
+        throw mainErrors.INCORRECT_VIDEO_PARAMETERS_ERROR.BAD_DURATION
     }
     const videoID = getVideoID(videoURL);
     if (videoID) {
@@ -55,13 +50,13 @@ const checkVideoRequirements = async (videoURL, start, end) => {
             console.log("checkout duration: ", duration);
             if (duration >= minDuration)
                 return duration >= minDuration
-            throwVideoError("Duration of video must be 5 sec or more")
+            throw mainErrors.INCORRECT_VIDEO_PARAMETERS_ERROR.BAD_DURATION
         }
         catch (e) {
             throw e
         }
     }
-    throwVideoError("Invalid link to the video")
+    throw mainErrors.INCORRECT_VIDEO_LINK_ERROR
 
 }
 const getVideoDuration = async (videoID) => {
