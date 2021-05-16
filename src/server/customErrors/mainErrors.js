@@ -39,7 +39,7 @@ const mainErrors = {
             error: {
                 code: `${errorCodes.INCORRECT_VIDEO_PARAMETERS_ERROR}.1`,
                 name: "IncorrectVideoParametersError",
-                message: "Start of video must be more than 0"
+                message: "Start of video must be not less than 0"
             }
         },
         BAD_END_TIME: {
@@ -72,7 +72,7 @@ const mainErrors = {
         error: {
             code: errorCodes.RECOGNITION_FAILED_ERROR,
             name: "RecognitionFailedError",
-            message: "Recognition failed"
+            message: "Recognition is failed"
         }
     }
 

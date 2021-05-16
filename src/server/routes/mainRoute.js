@@ -33,8 +33,8 @@ router.post("/",   (req, res) => {
                 res.status(200).send(songInfo);
             }
             catch (e) {
-                console.log(e)
-                res.status(200).json(e)
+                console.log("Catch Error: ", e)
+                res.status(200).send(e)
             }
         }
         catch (e) {

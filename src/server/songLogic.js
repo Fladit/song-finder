@@ -25,7 +25,7 @@ const getLinkOfAudioRoad = async (videoURL) => {
         return downloadLink
     }
     catch (e) {
-        throw createCustomError(e.message)
+        throw e
     }
 }
 
@@ -73,12 +73,12 @@ const findSong = async (videoURL, start, end, clientIP) =>{
         if (err)
             throw createCustomError(err.message);
     });
-    const linkForDownload = await getLinkOfAudioRoad(videoURL);
-    console.log("Link: ", linkForDownload);
     const song = fs.createWriteStream(currentPath + "song.mp3");
     const targetPath = currentPath + 'target.mp3'
     //console.log(typeof linkForDownload, " value = ", linkForDownload)
     try {
+        const linkForDownload = await getLinkOfAudioRoad(videoURL);
+        console.log("Link: ", linkForDownload);
         const response = await Axios({
             url: linkForDownload,
             method: 'GET',

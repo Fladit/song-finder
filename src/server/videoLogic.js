@@ -31,6 +31,29 @@ const getVideoID = (videoURL) => {
     return videoID;
 }
 
+const getVideoDuration = async (videoID) => {
+    const APIkey = process.env.YOUTUBE_API_KEY
+    const reqURL = `https://www.googleapis.com/youtube/v3/videos?id=${videoID}&part=contentDetails&key=${APIkey}`
+    console.log(reqURL)
+    try {
+        const response = await Axios.get(reqURL);
+        let isoTime = response.data.items[0]?.contentDetails?.duration
+        if (!isoTime)
+            throw mainErrors.INCORRECT_VIDEO_LINK_ERROR
+        const date = (moment.duration(isoTime).asMilliseconds() / 1000);
+        return date - 1;
+    }
+    catch (e) {
+        console.log(e)
+        if (e.error.name === mainErrors.INCORRECT_VIDEO_LINK_ERROR.error.name) {
+            throw e
+        }
+        const err = mainErrors.YOUTUBE_API_ERROR
+        err.error.message = e.error.message
+        throw err
+    }
+}
+
 // start - начало видео, end - конец видео
 const checkVideoRequirements = async (videoURL, start, end) => {
     const minDuration = 5
@@ -58,22 +81,6 @@ const checkVideoRequirements = async (videoURL, start, end) => {
     }
     throw mainErrors.INCORRECT_VIDEO_LINK_ERROR
 
-}
-const getVideoDuration = async (videoID) => {
-    const APIkey = process.env.YOUTUBE_API_KEY
-    const reqURL = `https://www.googleapis.com/youtube/v3/videos?id=${videoID}&part=contentDetails&key=${APIkey}`
-    console.log(reqURL)
-    try {
-        const response = await Axios.get(reqURL);
-        let isoTime = response.data.items[0].contentDetails.duration
-        const date = (moment.duration(isoTime).asMilliseconds() / 1000);
-        return date - 1;
-    }
-    catch (e) {
-        const err = mainErrors.YOUTUBE_API_ERROR
-        err.error.message = e.error.message
-        throw err
-    }
 }
 
 
