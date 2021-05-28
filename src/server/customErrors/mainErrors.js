@@ -58,6 +58,14 @@ const mainErrors = {
                 message: "Duration of video must be 5 sec or more"
             }
         },
+        PARAMETERS_MISSING: {
+            status: "error",
+            error: {
+                code: `${errorCodes.INCORRECT_VIDEO_PARAMETERS_ERROR}.4`,
+                name: "IncorrectVideoParametersError",
+                message: "Some of the parameters are missing"
+            }
+        }
     },
     YOUTUBE_API_ERROR: {
         status: "error",

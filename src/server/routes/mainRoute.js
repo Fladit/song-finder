@@ -4,6 +4,12 @@ const {findSong} = require("../songLogic");
 const {getVideoDuration, getVideoID} = require("../videoLogic");
 const {createCustomError, mainErrors} = require("../customErrors/mainErrors");
 router.post("/",   (req, res) => {
+    if (!(req.body.id && (req.body.start).toString() && (req.body.end).toString())) {
+        console.log(req.body.id && req.body.start && req.body.end)
+        console.log("test")
+        return res.status(200)
+            .send(mainErrors.INCORRECT_VIDEO_PARAMETERS_ERROR.PARAMETERS_MISSING)
+    }
     const userIP = req.ip;
     requestSchema.countDocuments({ip: userIP}, async (err, count) => {
         if (err)

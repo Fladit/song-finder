@@ -4,7 +4,6 @@ const {mainErrors, createCustomError} = require('../server/customErrors/mainErro
 require('dotenv').config()
 
 const getVideoID = (videoURL) => {
-    let videoID = ""
     if (videoURL)
     {
         if (videoURL.length >= 16)
@@ -13,14 +12,14 @@ const getVideoID = (videoURL) => {
             {
                 if (videoURL.includes("v="))
                 {
-                    videoID = videoURL.split("v=")[1].substring(0,11);
+                    return videoURL.split("v=")[1].substring(0,11);
                 }
                 else return false;
             }
             else {
                 if (videoURL.includes("youtu.be"))
                 {
-                    videoID = videoURL.split("youtu.be/")[1].substring(0,11);
+                    return videoURL.split("youtu.be/")[1].substring(0,11);
                 }
                 else return false;
             }
@@ -28,7 +27,6 @@ const getVideoID = (videoURL) => {
         else return false;
     }
     else return false;
-    return videoID;
 }
 
 const getVideoDuration = async (videoID) => {
